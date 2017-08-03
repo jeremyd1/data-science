@@ -1,0 +1,16 @@
+Transportation Systems 
+
+4 unique ids
+  line_id - identifier for transportation lines
+  city_id - identifier for each city
+  system_id - identifier for each system
+
+Cities
+  - map : city id -> city name + city country
+  
+Lines
+  - identifies all the transportation lines within a city 
+  - contains map : system_id -> city_id + line name 
+ 
+Track Coords
+  - contains the long, lat for tracks 
