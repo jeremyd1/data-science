@@ -1,0 +1,131 @@
+Observations
+
+3 Data Sets
+  - train - 9000 values
+  - test - 3000 values
+  - validation - 2999 values
+  
+  
+Exploratory Analysis:
+
+  Var1: satisfaction_level 
+    - negatively skewed -> majority ofemployees are satisfied
+
+    Observations
+       - 3 major clusters
+    
+    
+  Var2: average_monthly_hours
+    - bimodal distribution w/ mean = median 
+      - 2 peaks are approx at 1st and 3rd Qu.
+    
+      1st Quartile = 155
+      Median = 200
+      Mean = 200.8
+      3rd Quartile = 245
+      
+    # of hours based on 9-5: 8*5*4 = 160
+      - 1st mode = just going 9-5 everyday
+  
+    hours/day based on 255 amh: (255/4)/5 = 12.75
+      - 2nd mode = 13 hrs/day
+      
+      Important Charts
+         - Scatterplot ~ number_project
+         - Scatterplot ~ left
+            - strong relationship between people who leave and # of projects/satisfaction level
+            
+
+
+  Var 3: number_project
+    - alost normal distribution w/ a slight positive skew 
+  
+      min: 2
+      median: 4
+      max: 7
+    
+
+         
+  Var 4: time_spend_company
+    - positively skewed w/ median = 3 -> majority of employees have been at the company for 3 years
+    Note: precipitous drop from # of 3rd years to # of 4th years
+    
+    Important Graphs
+      - Line Graph of time vs avg project #
+        - significant increase in avg project # from 3-4 years at the company 
+      - Scatterplot 
+        - shows that cluster of overworked people w/ high # of projects are typicaly 4th and 5th years (times when project # increases significantly)
+        - bar graph of NP ~ TSC supports this as the # of people with 5-7 projects are 4th and 5th years
+        
+        
+        
+ Var 5: last_evaluation
+    min: 0.36
+    median: 0.72
+    max: 1
+    
+
+
+  Var 6: Work_accident
+    - 14.5% of workers have been in an accident
+    - accidents are evenly distributed -> not correlated with any variable and rates are spread across departments & average_monthly hours
+    
+    Important Graphs
+      - Scatterplot w/ color = left
+        - people that leave after an accident are in the same places (clusters) as those in the scatterplot for amh vs sl
+          - work accident probably isn't a very important factor
+
+
+
+  Var 7: Promotion Last 5 Years
+    - 2.1% of employees were promoted
+    - not correlated with any other variable 
+    
+    Important Graphs
+      - Scatterplot
+        - promotions aren't clustered together / seem unlinked to AMH worked
+      - Tables
+        - promotions are evenly distributed among low satisfaction and high satisfaction employees
+      - Bar Graph - proportion of promotions for each department
+        - Management is 1st
+        - marketing is 2nd
+        - RandD is 3rd
+        
+
+
+  Var 8: Sales
+    - sales department has the most people
+    
+    Important Graphs
+      - Scatterplot
+        - people are distributed all over the different departments
+      - Bar Graphs
+        - people who left were distributed
+        
+        
+  Var 9: Salary
+    - salaries are evenly distrbitued vs AMH
+    - same % of each salary level is satisfied (SL > 0.5)
+    - low salary employees are the ones most likely to leave - 30%
+      - overworked + dissatisfied employees are almost all being paid low + medium salaries
+    
+
+
+
+
+Risk Factors for leaving
+ - low satisfaction level
+ - high number of projects + high number of average monthly hours
+ - low number of projects + 1st quartile number of average monthly hours (8 hr/day)
+ - time spent at company == 3 OR time spent at company >= 4 AND < 6 (period where employees are assigned a large # of projects)
+ - low + medium salary -> overworked + low SL
+ - low + medium + high salary -> underworked + low SL
+      
+  
+  
+
+  Predictions:
+    - logistic regression + decision trees -> same AUC (0.811)
+    - random forest -> AUC (0.991)
+
+    

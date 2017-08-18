@@ -1,0 +1,28 @@
+#Human Resources Analytics  
+
+### Introduction  
+
+At Company X, there has been a recent exodus of some of its brightest and most experienced employees. 
+
+With data provided by the HR department, our primary goal is to understand why a portion of company X's best employees are leaving prematurely. 
+
+And in order to better prepare for future events, our secondary goal is to build a classifier that can accurately predict whether an employee chooses to stay or leave. 
+
+
+### Data Pipeline
+
+
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
