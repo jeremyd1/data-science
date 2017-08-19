@@ -1,28 +1,239 @@
-#Human Resources Analytics  
+---
+title: To Leave or Not to Leave?
+subtitle: HR Analytics
+date: August 17, 2017
+output: 
+  html_document:
+    theme: united
+    toc: TRUE
+    toc_depth: 2
+    code_folding: hide
+---
 
-### Introduction  
-
-At Company X, there has been a recent exodus of some of its brightest and most experienced employees. 
-
-With data provided by the HR department, our primary goal is to understand why a portion of company X's best employees are leaving prematurely. 
-
-And in order to better prepare for future events, our secondary goal is to build a classifier that can accurately predict whether an employee chooses to stay or leave. 
-
-
-### Data Pipeline
-
-
-
-```{r cars}
-summary(cars)
+```{r global, echo = FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
 ```
 
-## Including Plots
+## Introduction  
 
-You can also embed plots, for example:
+At company X, the premature exodus of some of its best and most experienced exmployees has left HR worried.
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+Using X's data set, our goal is to help HR build a classifier that can accurately predict whether or not an employee leaves and correctly identify the key features influencing his/her decision. 
+
+
+
+## Data {.tabset .tabset-fade}
+
+### 1 - Tidy Data
+
+#### Objectives
+
+* *Read in the HR data set and convert it into a* [tidy format](https://cran.r-project.org/web/packages/tidyr/vignettes/tidy-data.html)
+* *Generate training, testing, and validation sets from the tidy data*
+
+<br>
+
+#### Data Source
+
+[Kaggle HR](https://www.kaggle.com/ludobenistant/hr-analytics)   
+
+
+#### Load Data
+
+Read in and store HR data as a data frame called *employees*
+
+```{r load, cache = TRUE}
+library(readr)
+library(dplyr)
+library(knitr)
+library(kableExtra)
+
+# build employees tidy df
+employees <- read_csv("../data/hr.csv", col_types = "ddiiiiiicc") %>%
+  mutate(sales = factor(sales, level = c("sales","technical","support","IT",
+                                         "product_mng","marketing","RandD",
+                                         "accounting","hr","management")),
+         salary = factor(salary, level = c("low","medium","high"))) %>%
+  rename("average_monthly_hours" = average_montly_hours)
+
+kable(employees[1:5, 1:7], format = "html", caption = "sample of employees data") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), font_size = 11, full_width = FALSE)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+<br>
+
+#### Split Data 
+
+Randomly split *employees* data into 3 disjoint data sets:  
+
+1. Training Set - *60%*  
+      i) used for model building
+2. Testing Set - *20%*
+      i) used for initial testing
+3. Validation Set - *20%*
+      i) used for final testing + model selection
+
+```{r split}
+library(caret) 
+
+set.seed(1) 
+inTrain <- createDataPartition(employees$left, p = 0.6, list = FALSE)
+train <- employees[inTrain,] # training set
+testing <- employees[-inTrain,]
+
+inTest <- createDataPartition(testing$left, p = 0.5, list = FALSE)
+test <- testing[inTest,] # testing set
+validation <- testing[-inTest,] # validation set
+```
+---
+
+
+### 2 - Exploratory Analysis
+
+#### Objectives
+
+* *explore features of the employees data set*
+* *find relationships between features*
+* *gather intuition for why employees are leaving*
+
+<br>
+
+#### Structure
+
+**9 Feature Variables:**
+
+* *satisfaction level*
+    + employee satisfaction (0-1)
+* *last evaluation*
+    + time, measured by fraction of a year, since last evaluation (0-1)
+* *number project*
+    + number of projects an employee is working on
+* *average monthly hours*
+    + average number of hours an employee works per month
+* *time spend company*
+    + total number of years an employee has worked 
+* *work accident*
+    + whether or not an employee has been in a work accident (0 or 1)
+* *promotion last 5 years*
+    + whether or not an employee has been promoted in the last 5 years (0 or 1)
+* *sales*
+    + department an employee is in
+* *salary*
+    + salary level an employee is in (low, medium, high)
+
+
+**1 Outcome Variable:**
+
+* *left*
+    + whether or not an employee left (0 or 1)
+
+
+```{r structure} 
+str(train)
+```
+
+<br>
+
+#### Feature Exploration
+
+##### Scatterplots:
+
+**Scatter1** depicts the relationship between *Satisfaction Level, Average Monthly Hours*, and whether or not an employee has *Left* 
+
+Observations:
+
+  * 3 Main Clusters of Employees that Left
+      * Cluster 1 - dissatisfied + working normal hours (8 hr/day)
+          * SL -> (0.35, 0.47)
+          * AMH -> (125, 162)
+      * Cluster 2 -> very satisfied + working long hours (12 hr/day)
+          * SL -> (0.72, 0.93)
+          * AMH -> (216, 276)  
+      * Cluster 3 - very dissatisfied + working long hours (14 hr/day)
+          * SL -> (0.08, 0.12)
+          * AMH -> (242, 311)
+          
+  
+
+```{r scatter1, cache = TRUE, fig.height = 5, fig.width = 6}
+library(ggplot2)
+library(gridExtra)
+library(plotly)
+
+# summary of average monthly hours
+amh_summary <- as.numeric(summary(train$average_monthly_hours))
+
+# scatterplot1 - AMH vs SL w/ color = left
+ggplot(train, aes(x = average_monthly_hours, y = satisfaction_level)) + 
+  geom_point(aes(color = as.factor(left)), alpha = 0.4, size = 0.6) + 
+  geom_vline(xintercept = amh_summary[-c(1,3,6)], color = "navy", linetype = "dotdash") +
+    labs(x = "Average Monthly Hours (hr)", y = "Satisfaction Level") +
+  ggtitle("SL vs AMH + Left") +
+  scale_color_discrete(name = "Left")
+```
+
+<br>
+
+**Scatter2** shows how *Number of Projects* is related to whether or not an employee *Left*
+  
+Observations:
+  
+  * Almost all of the employees in Cluster 1 have 2 projects
+  * 
+  * Almost all of the employees in Cluster 3 have 6-7 projects
+
+
+```{r scatter2, cache = TRUE, fig.height = 5, fig.width = 7}
+# scatterplot2 - AMH vs SL w/ color = number_project
+ggplot(train, aes(x = average_monthly_hours, y = satisfaction_level, color = as.factor(number_project))) +
+  geom_point(alpha = 0.4, size = 0.6) +
+  geom_vline(xintercept = amh_summary[-c(1,3,6)], color = "navy", linetype = "dotdash") + 
+  labs(x = "Average Monthly Hours (hr)", y = "Satisfaction Level") +
+  ggtitle("SL vs AMH + NP") +
+  scale_color_discrete(name = "Number of Projects")
+```
+
+<br>
+
+**Scatter3** provides insights into the employees that *Left* and the time they spent at the company:  
+
+
+```{r scatter3, cache = TRUE, fig.height = 5, fig.width = 7.5}
+ggplot(train, aes(x = average_monthly_hours, y = satisfaction_level, color = as.factor(time_spend_company))) + 
+  geom_point(alpha = 0.4, size = 0.6) +
+  geom_vline(xintercept = amh_summary[-c(1,3,6)], color = "navy", linetype = "dotdash") + 
+  labs(x = "Average Monthly Hours (hr)", y = "Satisfaction Level") +
+  ggtitle("SL vs AMH + TSC") +
+  scale_color_discrete(name = "Time Spend Company (yr)")
+```
+
+
+
+
+
+
+
+
+
+---
+
+
+## Predictive Modeling {.tabset .tabset-fade}
+
+### 1 - Logistic Regression
+
+### 2 - Decision Trees
+
+### 3 - Random Forest
+
+
+
+## Results
+
+
+## Conclusion
+
+### Summary
+
+### Recommendations
+

@@ -103,6 +103,13 @@ ggplot(train, aes(x = number_project)) +
   geom_bar(fill = "navy") + 
   scale_x_continuous(breaks = 2:7)
 
+# Bar Graph - distribution of number_project for employees in Cluster 3
+train %>%
+  filter(satisfaction_level < 0.12, average_monthly_hours < 311, average_monthly_hours > 242) %>%
+  group_by(number_project) %>%
+  summarize(n = n()) %>%
+  ggplot(aes(x = number_project, y = n)) + 
+  geom_bar(stat = "identity")
 
 
 
@@ -131,19 +138,18 @@ train %>%
   geom_bar(stat = "identity") + 
   scale_x_continuous(breaks = 2:10)
 
-# Bar Graph - distribution of number_project for each year in time_spend_company
+# Bar Graph - distribution of time_spend_company for each level in number_project
 train %>%
-  group_by(time_spend_company, number_project) %>%
+  group_by(number_project, time_spend_company) %>%
   summarize(count = n()) %>%
   mutate(perc = count / sum(count)) %>%
   ggplot(aes(x = number_project, y = perc, fill = as.factor(time_spend_company))) + 
   geom_bar(stat = "identity") + 
-  scale_x_continuous(breaks = 2:10) +
-  facet_grid(time_spend_company ~ .)
+  scale_x_continuous(breaks = 2:10)
 
 # Scatterplot - AMH vs SL w/ color = time_spend_company
-ggplot(train, aes(x = average_monthly_hours, y = satisfaction_level)) + 
-  geom_point(aes(color = as.factor(time_spend_company)))
+ggplot(train, aes(x = average_monthly_hours, y = satisfaction_level, color = as.factor(time_spend_company))) + 
+  geom_point(alpha = 0.4, size = 0.6)
 
 
 

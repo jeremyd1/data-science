@@ -1,0 +1,11 @@
+base
+readr
+dplyr
+bindrcpp
+lattice
+ggplot2
+caret
+gridExtra
+knitr
+kableExtra
+plotly
