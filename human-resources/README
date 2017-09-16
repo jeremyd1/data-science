@@ -1,0 +1,7 @@
+Human Resources
+This project uses a Random Forest Classifier to predict whether or not an employee will leave the firm
+
+scripts folder -> contains R scripts for modeling data
+  - left.rmd is a report documenting the findings of my analysis
+  
+data folder -> HR data set
