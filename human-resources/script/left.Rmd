@@ -17,7 +17,7 @@ knitr::opts_chunk$set(message = FALSE, warning = FALSE)
 
 ## Introduction  
 
-At company X, the premature exodus of some of its best and most experienced exmployees has left HR worried.
+At company X, the premature exodus of some of its best and most experienced employees has left HR worried.
 
 Using X's data set, our goal is to help HR build a classifier that can accurately predict whether or not an employee leaves and correctly identify the key features influencing his/her decision. 
 
