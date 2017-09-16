@@ -1,2 +1,3 @@
-City - Lines
+City Lines
 This project is a visualization of the transportation lines of 30+ major cities using R.
+A cumulative plot of all lines is located in the plots folder and the script for producing the plot can be found in the scripts folder
