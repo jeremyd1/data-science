@@ -74,6 +74,24 @@ ggplot(train, aes(x = satisfaction_level)) +
   facet_grid(. ~ salary)
 
 
+# CLUSTERS OF EMPLOYEES THAT LEFT
+
+# Cluster 1
+cluster1 <- train %>%
+  filter(satisfaction_level < 0.47, satisfaction_level > 0.35, 
+         average_monthly_hours < 162, average_monthly_hours > 125, left == 1)
+
+# Cluster 2
+cluster2 <- train %>%
+  filter(satisfaction_level < 0.93, satisfaction_level > 0.72, 
+         average_monthly_hours > 216, average_monthly_hours < 276, left == 1)
+
+# Cluster 3
+cluster3 <- train %>%
+  filter(satisfaction_level < 0.12, 
+         average_monthly_hours < 311, average_monthly_hours > 242, left == 1)
+
+
 
 
 # Var 2 -> Average Monthly Hours
@@ -103,13 +121,12 @@ ggplot(train, aes(x = number_project)) +
   geom_bar(fill = "navy") + 
   scale_x_continuous(breaks = 2:7)
 
-# Bar Graph - distribution of number_project for employees in Cluster 3
-train %>%
-  filter(satisfaction_level < 0.12, average_monthly_hours < 311, average_monthly_hours > 242) %>%
+cluster1 %>%
   group_by(number_project) %>%
   summarize(n = n()) %>%
-  ggplot(aes(x = number_project, y = n)) + 
+  ggplot(aes(x = number_project, y = n, fill = as.factor(number_project))) + 
   geom_bar(stat = "identity")
+
 
 
 
@@ -148,8 +165,32 @@ train %>%
   scale_x_continuous(breaks = 2:10)
 
 # Scatterplot - AMH vs SL w/ color = time_spend_company
-ggplot(train, aes(x = average_monthly_hours, y = satisfaction_level, color = as.factor(time_spend_company))) + 
+ggplot(train, aes(x = average_monthly_hours, y = satisfaction_level, 
+                  color = as.factor(time_spend_company))) + 
   geom_point(alpha = 0.4, size = 0.6)
+
+
+
+# Bar Graph of TSC for employees in Cluster 1
+cluster1 %>%
+  group_by(time_spend_company) %>%
+  summarize(n = n()) %>%
+  ggplot(aes(x = time_spend_company, y = n, fill = as.factor(time_spend_company))) + 
+  geom_bar(stat = "identity")
+
+# Bar Graph of TSC for employees in Cluster 2
+cluster2 %>%
+  group_by(time_spend_company) %>%
+  summarize(n = n()) %>%
+  ggplot(aes(x = time_spend_company, y = n, fill = as.factor(time_spend_company))) + 
+  geom_bar(stat = "identity")
+
+# Bar Graph of TSC for employees in Cluster 3
+cluster3 %>%
+  group_by(time_spend_company) %>%
+  summarize(n = n()) %>%
+  ggplot(aes(x = time_spend_company, y = n, fill = as.factor(time_spend_company))) + 
+  geom_bar(stat = "identity")
 
 
 
@@ -160,7 +201,42 @@ ggplot(train, aes(x = last_evaluation)) +
   geom_histogram(aes(y =..density..), fill = "white", color = "black") +
   geom_density(fill = "red", alpha = 0.2)
 
+# Scatterplot
+train1 <- train %>%
+  mutate(last_evaluation_group = cut(last_evaluation, breaks = seq(0, 1, 0.1),
+                                     labels = 1:10))
 
+train1 %>%
+  ggplot(aes(x = average_monthly_hours, y = satisfaction_level, 
+             color = last_evaluation_group)) +
+  geom_point(alpha = 0.2, size = 0.6)
+
+
+t1 <- cluster1 %>%
+  mutate(last_evaluation_group = cut(last_evaluation, breaks = seq(0, 1, 0.1),
+                                     labels = 1:10)) 
+t1 %>%
+  ggplot(aes(x = average_monthly_hours, y = satisfaction_level, 
+             color = last_evaluation_group)) +
+  geom_point(alpha = 0.4, size = 0.6)
+
+t2 <- cluster2 %>%
+  mutate(last_evaluation_group = cut(last_evaluation, breaks = seq(0, 1, 0.1),
+                                     labels = 1:10)) 
+
+t2 %>%
+  ggplot(aes(x = average_monthly_hours, y = satisfaction_level, 
+             color = last_evaluation_group)) +
+  geom_point(alpha = 0.4, size = 0.6)
+
+t3 <- cluster3 %>%
+  mutate(last_evaluation_group = cut(last_evaluation, breaks = seq(0, 1, 0.1),
+                                     labels = 1:10)) 
+
+t3 %>%
+  ggplot(aes(x = average_monthly_hours, y = satisfaction_level, 
+             color = last_evaluation_group)) +
+  geom_point(alpha = 0.4, size = 0.6)
 
 
 # Var 6 -> Work_accident
@@ -194,7 +270,25 @@ ggplot(train, aes(x = as.factor(promotion_last_5years))) +
 # Scatterplot - see if AMH vs SL can predict promotions
 ggplot(train, aes(x = average_monthly_hours, y = satisfaction_level, 
                   color = as.factor(promotion_last_5years))) + 
-  geom_point(alpha = 0.2, size = 0.6)
+  geom_point(alpha = 0.4, size = 0.6)
+
+# Scatterplot of people who were promoted + people working > 225 AMH
+train %>%
+  filter(promotion_last_5years == 1 | 
+           (promotion_last_5years == 0 & average_monthly_hours > 225)) %>%
+  ggplot(aes(x = average_monthly_hours, y = satisfaction_level, 
+             color = as.factor(promotion_last_5years), shape = as.factor(left))) +
+  geom_point(alpha = 0.4)
+
+promoted_left <- train %>%
+  filter(left == 1) %>%
+  group_by(promotion_last_5years) %>%
+  summarize(n = n())
+
+promoted_stay <- train %>%
+  filter(left == 0) %>%
+  group_by(promotion_last_5years) %>%
+  summarize(n = n())
 
 # Tables of Promotions - dissatisfied vs satisfied 
 lower <- train %>%
@@ -234,6 +328,17 @@ ggplot(train, aes(x = average_monthly_hours, y = satisfaction_level, color = sal
 total_by_department <- train %>%
   group_by(sales) %>%
   summarize(total = n())
+
+# % of people from every department that left
+train %>%
+  filter(left == 1) %>%
+  group_by(sales) %>%
+  summarize(n = n()) %>%
+  inner_join(total_by_department) %>%
+  mutate(perc = n / total) %>%
+  ggplot(aes(x = sales, y = perc, fill = sales)) + 
+  geom_bar(stat = "identity")
+
 
 # Bar Graph - analyzing department #'s for people with SL < 0.12
 train %>%
@@ -285,8 +390,7 @@ train %>%
 
 # Scatterplot - see if AMH vs SL can predict salary level 
 ggplot(train, aes(x = average_monthly_hours, y = satisfaction_level, color = salary)) + 
-  geom_point(alpha = 0.4, size = 0.6) +
-  geom_smooth(method = "lm")
+  geom_point(alpha = 0.4, size = 0.6)
 
 # Bar Graph - % of each salary level that left
 salary_count <- train %>%
@@ -318,14 +422,45 @@ train %>%
   ggplot(aes(x = salary, y = n, fill = salary)) + 
   geom_bar(stat = "identity")
 
+-------------------------------------------------
+# Why are employees from cluster 2 leaving?
+#   - satisfied
+#   - normal # of projects
+#   - made it past 4th year
+
+train %>%
+  ggplot(aes(x = average_monthly_hours, y = satisfaction_level, color = as.factor(left))) +
+  geom_point(alpha = 0.2, size = 0.6) +
+  geom_vline(xintercept = c(216, 276)) +
+  geom_hline(yintercept = c(0.72, 0.93)) +
+  geom_point(data = filter(train, (time_spend_company == 5 | time_spend_company == 6)), 
+                           aes(x = average_monthly_hours, y = satisfaction_level), 
+             color = "navy", alpha = 0.6, size = 0.6)
+
+# Scatterplot of employees who were promoted
+train %>%
+  filter(time_spend_company >= 5) %>%
+  ggplot(aes(x = average_monthly_hours, y = satisfaction_level, color = as.factor(promotion_last_5years))) +
+  geom_point(alpha = 0.4, size = 0.6)
 
 
+train %>%
+  filter(time_spend_company >= 5) %>%
+  ggplot(aes(x = average_monthly_hours, y = satisfaction_level, color = as.factor(salary), shape = as.factor(left))) +
+  geom_point(alpha = 0.4)
+
+
+# 1 possible explanation: after working for 5-6 years, a lot of them haven't been promoted yet
+#   - out of all the people >= 5 years at the company, they are the ones who work the longest
+#   - maybe they were putting in the effort but seeing no reward?
 -------------------------------------------------
   
 # Predictive Modeling
 
 # Baseline Accuracy - 0.763 for prediction = 0 for all obs
-max(table(train$left) / nrow(train))
+train_baseline <- max(table(train$left) / nrow(train))
+test_baseline <- max(table(test$left) / nrow(test))
+
 
 # Functions
 

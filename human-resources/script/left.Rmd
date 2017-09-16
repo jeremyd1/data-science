@@ -1,6 +1,7 @@
 ---
 title: To Leave or Not to Leave?
 subtitle: HR Analytics
+author: Jeremy Dong 
 date: August 17, 2017
 output: 
   html_document:
@@ -143,22 +144,21 @@ str(train)
 Observations:
 
   * 3 Main Clusters of Employees that Left
-      * Cluster 1 - dissatisfied + working normal hours (8 hr/day)
-          * SL -> (0.35, 0.47)
+      + **Cluster 1** - dissatisfied + working normal hours (8 hr/day)
           * AMH -> (125, 162)
-      * Cluster 2 -> very satisfied + working long hours (12 hr/day)
+          * SL -> (0.35, 0.47)
+      + **Cluster 2** -> very satisfied + working long hours (12 hr/day)
+          * AMH -> (216, 276)
           * SL -> (0.72, 0.93)
-          * AMH -> (216, 276)  
-      * Cluster 3 - very dissatisfied + working long hours (14 hr/day)
-          * SL -> (0.08, 0.12)
+      + **Cluster 3** - very dissatisfied + working long hours (14 hr/day)
           * AMH -> (242, 311)
-          
+          * SL -> (0.08, 0.12)
   
 
-```{r scatter1, cache = TRUE, fig.height = 5, fig.width = 6}
+```{r scatter1, cache = TRUE, fig.align = "center", fig.height = 5, fig.width = 6}
 library(ggplot2)
+library(grid)
 library(gridExtra)
-library(plotly)
 
 # summary of average monthly hours
 amh_summary <- as.numeric(summary(train$average_monthly_hours))
@@ -172,55 +172,198 @@ ggplot(train, aes(x = average_monthly_hours, y = satisfaction_level)) +
   scale_color_discrete(name = "Left")
 ```
 
+```{r clusters, cache = TRUE, fig.align = "center", fig.height = 2.5}
+# Cluster 1
+cluster1 <- train %>%
+  filter(satisfaction_level < 0.47, satisfaction_level > 0.35, 
+         average_monthly_hours < 162, average_monthly_hours > 125, left == 1)
+
+# plot of Cluster 1
+s1 <- cluster1 %>%
+  ggplot(aes(x = average_monthly_hours, y = satisfaction_level)) + 
+  geom_point(color = "lightskyblue", alpha = 0.1, size = 0.6) + 
+  scale_x_continuous(limits = c(100, 300)) +
+  scale_y_continuous(limits = c(0, 1)) +
+  labs(x = "Average Monthly Hours (hr)", y = "Satisfaction Level") +
+  ggtitle("Cluster 1")
+
+
+# Cluster 2
+cluster2 <- train %>%
+  filter(satisfaction_level < 0.93, satisfaction_level > 0.72, 
+         average_monthly_hours > 216, average_monthly_hours < 276, left == 1)
+
+# plot of Cluster 2
+s2 <- cluster2 %>%
+  ggplot(aes(x = average_monthly_hours, y = satisfaction_level)) + 
+  geom_point(color = "lightskyblue", alpha = 0.2, size = 0.6) + 
+  scale_x_continuous(limits = c(100, 300)) +
+  scale_y_continuous(limits = c(0, 1)) +
+  labs(x = "Average Monthly Hours (hr)", y = "Satisfaction Level") +
+  ggtitle("Cluster 2")
+
+
+# Cluster 3
+cluster3 <- train %>%
+  filter(satisfaction_level < 0.12, 
+         average_monthly_hours < 311, average_monthly_hours > 242, left == 1)
+
+# plot of Cluster 3
+s3 <- cluster3 %>%
+  ggplot(aes(x = average_monthly_hours, y = satisfaction_level)) + 
+  geom_point(color = "lightskyblue", alpha = 0.2, size = 0.6) + 
+  scale_x_continuous(limits = c(100, 300)) +
+  scale_y_continuous(limits = c(0, 1)) +
+  labs(x = "Average Monthly Hours (hr)", y = "Satisfaction Level") +
+  ggtitle("Cluster 3")
+
+grid.arrange(s1, s2, s3, ncol = 3)
+```
+
 <br>
+
 
 **Scatter2** shows how *Number of Projects* is related to whether or not an employee *Left*
   
 Observations:
   
-  * Almost all of the employees in Cluster 1 have 2 projects
-  * 
-  * Almost all of the employees in Cluster 3 have 6-7 projects
+  * Cluster 1 - majority have 2 projects
+  * Cluster 2 - majority have 4-5 projects 
+  * Cluster 3 - majority have 6-7 projects
 
 
-```{r scatter2, cache = TRUE, fig.height = 5, fig.width = 7}
+```{r scatter2, cache = TRUE, fig.align = "center", fig.height = 5, fig.width = 6.5}
 # scatterplot2 - AMH vs SL w/ color = number_project
 ggplot(train, aes(x = average_monthly_hours, y = satisfaction_level, color = as.factor(number_project))) +
   geom_point(alpha = 0.4, size = 0.6) +
   geom_vline(xintercept = amh_summary[-c(1,3,6)], color = "navy", linetype = "dotdash") + 
   labs(x = "Average Monthly Hours (hr)", y = "Satisfaction Level") +
   ggtitle("SL vs AMH + NP") +
-  scale_color_discrete(name = "Number of Projects")
+  scale_color_discrete(name = "Number Projects") +
+  theme(legend.title = element_text(size = 10))
+```
+
+```{r bars, cache = TRUE, fig.align = "center", fig.height = 2.5, fig.width = 7}
+# bar graph of cluster 1 - number projects
+b1 <- cluster1 %>%
+  group_by(number_project) %>%
+  summarize(n = n()) %>%
+  ggplot(aes(x = number_project, y = n, fill = as.factor(number_project))) + 
+  geom_bar(stat = "identity") +
+  labs(x = "Number of Projects", y = "Frequency") +
+  ggtitle("Cluster 1") +
+  scale_x_continuous(limit = c(1, 8), breaks = 2:7) +
+  theme(legend.position = "")
+
+# bar graph of cluster 2 - number projects
+b2 <- cluster2 %>%
+  group_by(number_project) %>%
+  summarize(n = n()) %>%
+  ggplot(aes(x = number_project, y = n, fill = as.factor(number_project))) +
+  geom_bar(stat = "identity") +
+  labs(x = "Number of Projects", y = "Frequency") +
+  ggtitle("Cluster 2") +
+  scale_x_continuous(limit = c(1, 8), breaks = 2:7) +
+  theme(legend.position = "")
+
+
+# bar graph of cluster 3 - number projects
+b3 <- cluster3 %>%
+  group_by(number_project) %>%
+  summarize(n = n()) %>%
+  ggplot(aes(x = number_project, y = n, fill = as.factor(number_project))) + 
+  geom_bar(stat = "identity") +
+  labs(x = "Number of Projects", y = "Frequency") +
+  ggtitle("Cluster 3") +
+  scale_x_continuous(limit = c(1, 8), breaks = 2:7) +
+  theme(legend.position = "")
+
+grid.arrange(b1, b2, b3, ncol = 3)
 ```
 
 <br>
 
+
 **Scatter3** provides insights into the employees that *Left* and the time they spent at the company:  
 
+Observations: 
 
-```{r scatter3, cache = TRUE, fig.height = 5, fig.width = 7.5}
+  * Cluster 1 - majority 3rd years
+  * Cluster 2 - mix of 5th and 6th years
+  * Cluster 3 - majority 4th years  
+
+Note:
+
+  * significant increase in workload from 3rd year -> 4th year
+
+
+```{r scatter3, cache = TRUE, fig.align = "center", fig.height = 5, fig.width = 6.8}
+# scatterplot3 - AMH vs SL w/ color = time_spend_company
 ggplot(train, aes(x = average_monthly_hours, y = satisfaction_level, color = as.factor(time_spend_company))) + 
   geom_point(alpha = 0.4, size = 0.6) +
   geom_vline(xintercept = amh_summary[-c(1,3,6)], color = "navy", linetype = "dotdash") + 
   labs(x = "Average Monthly Hours (hr)", y = "Satisfaction Level") +
   ggtitle("SL vs AMH + TSC") +
-  scale_color_discrete(name = "Time Spend Company (yr)")
+  scale_color_discrete(name = "Time Spend Company (yr)") +
+  theme(legend.title = element_text(size = 9))
 ```
 
+```{r line, cache = TRUE, fig.align = "center", fig.height = 2, fig.width = 6}
+# line graph of average number of projects for each year
+train %>%
+  group_by(time_spend_company) %>%
+  summarize(avg_number_project = mean(number_project)) %>%
+  ggplot(aes(x = time_spend_company, y = avg_number_project)) + 
+  geom_point() + 
+  geom_line(color = "navy") +
+  scale_x_continuous(breaks = 2:10) +
+  scale_y_continuous(breaks = seq(3, 5, 0.3)) +
+  labs(x = "Time Spend Company", y = "Average # of Projects") 
+```
 
+#### Summary
 
+**Cluster 1**  
 
+* dissatsified (SL < 0.5) 3rd year employees who are working normal hours (8) but have little to do due to their low # of projects (2)
+    
+**Cluster 2**
 
+* very satisfied (SL > 0.7) 5th-6th year employees who are working long hours (12) and have a nomral # of projects (4-5)
+    
+**Cluster 3**
 
-
-
-
----
+* very dissatisfied (SL < 0.25) 4th year employees who are working very long hours (14) and have too many projects (6-7)
 
 
 ## Predictive Modeling {.tabset .tabset-fade}
 
 ### 1 - Logistic Regression
+
+#### Goal
+
+  Build a linear model that can accurately predict whether or not an employee leaves
+
+<br>
+
+#### Baseline Model
+Naive Baseline: prediction model that predicts the most frequent outcome every time
+
+Baseline Training Set Accuracy: *0.763*
+
+  * predict all 0's (stay)
+
+Baseline Testing Set Accuracy: *0.764*
+
+  * predict all 0's (stay)
+
+```{r baseline, echo = TRUE}
+# training set
+train_baseline <- max(table(train$left) / nrow(train))
+
+# testing set
+test_baseline <- max(table(test$left) / nrow(test))
+```
 
 ### 2 - Decision Trees
 
